@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  s3-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.s3
+    ports:
+      - "8012:8002"
+    env_file:
+      - .env
+    environment:
+      - S3_MCP_SERVER_PORT=8002
+      - S3_MCP_SERVER_HOST=s3-mcp-server
+    volumes:
+      - ./src/:/app/src/
+    restart: on-failure
+    networks:
+      - agent-network
+
+  streamlit-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    ports:
+      - "5551:5521"
+    env_file:
+      - .env
+    environment:
+      - STREAMLIT_SERVER_PORT=8501
+      - S3_MCP_SERVER_HOST=s3-mcp-server
+      - S3_MCP_SERVER_PORT=8002
+    volumes:
+      - .:/app/
+    depends_on:
+      - s3-mcp-server
+    networks:
+      - agent-network
+
+networks:
+  agent-network:
+    driver: bridge
